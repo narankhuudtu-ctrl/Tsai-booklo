@@ -1,6 +1,8 @@
 package mn.tsai.booklo;
 
 import android.app.Activity;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.webkit.WebView;
@@ -30,30 +32,55 @@ public class MainActivity extends Activity {
             @Override
             public void onPageFinished(WebView v, String url) {
                 if (!orderText.isEmpty()) {
-                    fill();
+                    web.postDelayed(new Runnable() {
+                        public void run() { fill(); }
+                    }, 1200);
                 }
             }
         });
 
-        handleIntent(getIntent());
+        readSource(getIntent());
         web.loadUrl(URL);
     }
 
     @Override
     protected void onNewIntent(Intent i) {
         super.onNewIntent(i);
-        handleIntent(i);
-        web.reload();
+        setIntent(i);
+        readSource(i);
     }
 
-    void handleIntent(Intent i) {
+    @Override
+    protected void onResume() {
+        super.onResume();
+        readClipboard();
+        if (!orderText.isEmpty() && web.getProgress() == 100) {
+            fill();
+        }
+    }
+
+    void readSource(Intent i) {
         if (i != null && Intent.ACTION_SEND.equals(i.getAction())) {
             String t = i.getStringExtra(Intent.EXTRA_TEXT);
-            if (t != null) {
+            if (t != null && !t.trim().isEmpty()) {
                 orderText = t;
-                Toast.makeText(this, "Захиалга хүлээн авлаа", Toast.LENGTH_SHORT).show();
+                return;
             }
         }
+        readClipboard();
+    }
+
+    void readClipboard() {
+        try {
+            ClipboardManager cm = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+            if (cm != null && cm.hasPrimaryClip() && cm.getPrimaryClip().getItemCount() > 0) {
+                CharSequence cs = cm.getPrimaryClip().getItemAt(0).getText();
+                if (cs != null && cs.length() > 5) {
+                    orderText = cs.toString();
+                    Toast.makeText(this, "Захиалга уншлаа", Toast.LENGTH_SHORT).show();
+                }
+            }
+        } catch (Exception e) { }
     }
 
     void fill() {
