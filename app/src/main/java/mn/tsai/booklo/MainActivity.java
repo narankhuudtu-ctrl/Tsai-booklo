@@ -14,7 +14,7 @@ public class MainActivity extends Activity {
 
     WebView web;
     String orderText = "";
-    static final String URL = "https://delivery.booklo.mn/";
+    static final String URL = "https://delivery.booklo.mn/order/create";
 
     @Override
     protected void onCreate(Bundle b) {
